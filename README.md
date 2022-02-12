@@ -12,7 +12,9 @@ The requirements for my project were:
 * Nozzle / Bed temperature Status
 * Progress bar for print progress
 
-In the four corners of the box are LED's that 
+In the four corners of the box are LED's that give status for the nozzle warmup status, bed status, wifi, connection status, etc...
+
+I've had this idea for a few years, but didn't know what I wanted it to look like.  I was thinking of putting a LED strip above the printer to show me status, but that would be limiting in where I could place it.  I then saw [this](https://www.youtube.com/watch?v=lTOuqMfCg7M&list=PLE9Um5NpNcs5u_P7cIbCNRe3nG3wy-gZ-&index=6&t=569s&ab_channel=pileofstuff) video which gave me the idea to go with a box that can sit on your desk.
 
 ## Getting Started
 
