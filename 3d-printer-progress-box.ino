@@ -5,6 +5,7 @@
     3.  Filament change - could I flash all the LED's RED or BLUE or something...would be cool...
     7.  When print was done, I turned off the printer.  All lgiths in the corners turned off, but the RING, only the bottom LED turned off, the rest stayed green.
     8.  Print finished...so top to LEDs on and the ring was all green.  Turned off the printer and the first ring light turned off, but the rest of the ring stayed green.  This should have shut off.
+    9.  If you see forbidden, check your API key - add this to the readme
 */
 
 /*
