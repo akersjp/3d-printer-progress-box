@@ -12,7 +12,6 @@
   - Include custom configuration file that defines WIFI_SSID and WIFI_PASSWORD
   - This is excluded from source control (.gitignore)
 */
-#include "configuration.h"
 #include <ESP8266WiFi.h>
 #include <ArduinoJson.h>
 #include <FastLED.h>
