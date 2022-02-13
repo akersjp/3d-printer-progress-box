@@ -28,3 +28,5 @@ jobs:
         with:
           sketch-paths: |
             - ./
+          libraries: |
+            - name: ESP8266WiFi
