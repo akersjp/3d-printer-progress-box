@@ -31,6 +31,10 @@ I've had this idea for a few years, but didn't know what I wanted it to look lik
 
 todo
 
+### Software Notes
+
+If you create a configuration.h file along side the source, you can define your own values for WIFI_SSID, WIFI_PASSWORD, etc... Because configuration.h is in the .gitignore, git won't pick it up for source control protecting your private values.  The main source file will look for these to be defined otherwise it'll use the defaults which won't work out of the box.
+
 ### The 3D Model
 
 I used this project as a learning experience for Fusion 360.  The model is made of 2 bodies 1) Lid 2) Box and they should be printed seprately.

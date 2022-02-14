@@ -1,11 +1,8 @@
-/* TODO
-    4.  When print is done, right now the ring stays GREEN all the way 100%.  This is probably fine until you start a new print OR turn off the printer OR disconnect
+/* TODO    
     1.  Progress went starting print, then canceling
-    2.  When printer is shut off, reset progress to OFF
-    3.  Filament change - could I flash all the LED's RED or BLUE or something...would be cool...
-    7.  When print was done, I turned off the printer.  All lgiths in the corners turned off, but the RING, only the bottom LED turned off, the rest stayed green.
-    8.  Print finished...so top to LEDs on and the ring was all green.  Turned off the printer and the first ring light turned off, but the rest of the ring stayed green.  This should have shut off.
-    9.  If you see forbidden, check your API key - add this to the readme
+    2.  Filament change - could I flash all the LED's RED or BLUE or something...would be cool...
+    3.  If you see forbidden, check your API key - add this to the readme
+    4.  Would be cool to pulse the LED's when it's 100%
 */
 
 /*
@@ -17,7 +14,7 @@
 #include <FastLED.h>
 
 /*
- * Override these with your information or create a configuration.h that isn't source controlled (.gitignore)
+   Override these with your information or create a configuration.h that isn't source controlled (.gitignore)
 */
 #if !(defined(WIFI_SSID))
 #define WIFI_SSID "YOUR SSID"
@@ -106,9 +103,9 @@ void setup() {
   // setup ring light
   // I have NO idea why I have to call show() twice...some posts about this and it might be specific
   //  to the ring lights I'm using
-  FastLED.addLeds<WS2811,PROGRESS_LING_LED, GRB>(leds, NUM_LEDS);
+  FastLED.addLeds<WS2811, PROGRESS_LING_LED, GRB>(leds, NUM_LEDS);
   FastLED.setBrightness(RING_BRIGHTNESS);
-  //eventually remove these and roll into updateLEDS() 
+  //eventually remove these and roll into updateLEDS()
   FastLED.show();
   FastLED.show();
 
@@ -128,7 +125,7 @@ void setup() {
 
 void setupWifi() {
   Serial.println("setupWifi()");
-  
+
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
   while (WiFi.status() != WL_CONNECTED) {
@@ -145,8 +142,8 @@ void setupWifi() {
 
 void setupTimers() {
   Serial.println("setupTimers()");
-  
-    // Setup Timers
+
+  // Setup Timers
   noInterrupts(); // disable all interrupts
   timer0_isr_init();
   timer0_attachInterrupt(ISR);
@@ -167,7 +164,7 @@ void updateLEDs() {
   updatePrinterLED();
   updateBedLED();
   updateNozzleLED();
-  
+
   // update ring light progress - once I'm getting state correclty, I can take the init out of setup and just rely on this
   updateProgressRingLED();
 }
@@ -177,65 +174,79 @@ void updateProgressRingLED() {
   Serial.println(print_progress);
   Serial.print("updateProgressRingLED() : job state = ");
   Serial.println(jobState);
+  Serial.print("updateProgressRingLED() : printer state = ");
+  Serial.println(printerStatus);
+
+  if(printerStatus == PRINTER_OFF) {
+    // clear LED's and return;
+    Serial.println("updateProgressRingLED():  This is the case where the printer is OFF.  Clearing LEDs and returning...");
+
+    fill_solid(leds, NUM_LEDS, CRGB::Black);
+    FastLED.show();
+    FastLED.show();
+    clearLastPrint = false;
+
+    return;
+  }
 
   // Check print state
-  if(jobState == JOB_OPERATIONAL) {
-    if(print_progress != NUM_LEDS) {
+  if (jobState == JOB_OPERATIONAL) 
+  {
+    if (print_progress != NUM_LEDS) {
       Serial.println("updateProgressRingLED() print_progress isn't done, so clearing leds");
-      fill_solid(leds,print_progress, CRGB::Black);
+      fill_solid(leds, print_progress, CRGB::Black);
       FastLED.show();
       FastLED.show();
       return;
-   } else {
+    } else {
       Serial.println("updateProgressRingLED() : ELSE case hit...");
-      
       // This is the case that the print finished and I turned off the printer...so I know it's done, clear the LEDS
-      if(printerStatus == PRINTER_OFF) {
+      if (printerStatus == PRINTER_OFF) {
         Serial.println("updateProgressRingLED() : PRINTER_OFF");
         // clear ring LEDs
-        fill_solid(leds,print_progress, CRGB::Black);
+        fill_solid(leds, print_progress, CRGB::Black);
         FastLED.show();
         FastLED.show();
         return;
       }
-      
+
       Serial.println("updateProgressRingLED() print progress is done, keep the leds lit to show it's done...");
     }
   } else {
     // job state is printing
-    if(bedStatus == BED_WARMING || nozzleStatus == NOZZLE_WARMING) {
+    if (bedStatus == BED_WARMING || nozzleStatus == NOZZLE_WARMING) {
       // we shouldn't show print status until we are done warming up.
       Serial.println("printer still warming up, don't show print status leds");
-      fill_solid(leds,NUM_LEDS, CRGB::Black);
+      fill_solid(leds, NUM_LEDS, CRGB::Black);
       FastLED.show();
       FastLED.show();
       return;
     }
   }
 
-  if(clearLastPrint == true) {
+  if (clearLastPrint == true) {
     Serial.println("updateProgressRingLED() cleaning up last print leds");
-    
-      fill_solid(leds,NUM_LEDS, CRGB::Black);
-      FastLED.show();
-      FastLED.show();
-      clearLastPrint = false;
+
+    fill_solid(leds, NUM_LEDS, CRGB::Black);
+    FastLED.show();
+    FastLED.show();
+    clearLastPrint = false;
   }
-  
-  fill_solid(leds,print_progress, CRGB::Green);
-  
+
+  fill_solid(leds, print_progress, CRGB::Green);
+
   // if we have room, blink the next LED to show print progress
-  if(print_progress<NUM_LEDS) {
+  if (print_progress < NUM_LEDS) {
     // Have to do this due to overload operator issue as described here:  https://forum.arduino.cc/t/usage-of-crgb-black/371727
     CRGB test_color = CRGB::Black;
     // change from black to yellow
-    if(leds[print_progress] == test_color) {
-      leds[print_progress] = CRGB::Yellow;  
+    if (leds[print_progress] == test_color) {
+      leds[print_progress] = CRGB::Yellow;
     } else {
-      leds[print_progress] = CRGB::Black; 
+      leds[print_progress] = CRGB::Black;
     }
   }
-   
+
   FastLED.show();
   FastLED.show();
 }
@@ -243,8 +254,8 @@ void updateProgressRingLED() {
 void updatePrinterLED() {
   Serial.print("updatePrinterLED() : printer status = ");
   Serial.println(printerStatus);
-  
-  switch(printerStatus) 
+
+  switch (printerStatus)
   {
     case PRINTER_OFF:
       // set LED to OFF
@@ -262,8 +273,8 @@ void updatePrinterLED() {
 void updateWifiLED() {
   Serial.print("updateWifiLED(): WiFi.status() = ");
   Serial.println(WiFi.status());
-  
-  switch(WiFi.status()) {
+
+  switch (WiFi.status()) {
     case WL_CONNECTED:
       // set LED to GREEN
       //digitalWrite(POWER_WIFI_STATUS_LED, HIGH);
@@ -278,7 +289,7 @@ void updateWifiLED() {
 void updateBedLED() {
   Serial.print("updateBedLED() : bed status = ");
   Serial.println(bedStatus);
-  
+
   switch (bedStatus) {
     case BED_OFF:
       digitalWrite(BED_STATUS_LED, LOW);
@@ -316,8 +327,8 @@ void updateNozzleLED() {
 bool isWifiConnected() {
   Serial.print("isWifiConnected() : returning ");
   Serial.println(WiFi.status());
-  
-  if(WiFi.status() != WL_CONNECTED) {
+
+  if (WiFi.status() != WL_CONNECTED) {
     return false;
   }
 
@@ -347,7 +358,7 @@ void initPins() {
 void getLatestPrinterStatus() {
   if (!client.connect(OCTOPRINT_ADDRESS, OCTOPRINT_PORT)) {
     Serial.println("getLatestPrinterStatus(): FAILED to connect, setting all LED's to OFF");
-    
+
     printerStatus = PRINTER_OFF;
     bedStatus = BED_OFF;
     nozzleStatus = NOZZLE_OFF;
@@ -464,10 +475,10 @@ void getLatestPrinterStatus() {
     Serial.println(nozzle_target);
     Serial.print("getLatestPrinterStatus() nozzle_actual: ");
     Serial.println(nozzle_actual);
-    
+
     Serial.print("getLatestPrinterStatus() printerState: ");
     Serial.println(printerState);
-    if(printerState) {
+    if (printerState) {
       printerStatus = PRINTER_ON;
     } else {
       printerStatus = PRINTER_OFF;
@@ -484,7 +495,7 @@ void getLatestPrinterStatus() {
 
 void updatePrintProgress() {
   Serial.println("updatePrintProgress()");
-  
+
   if (!client.connect(OCTOPRINT_ADDRESS, OCTOPRINT_PORT)) {
     // can't connect
     return;
@@ -546,30 +557,37 @@ void updatePrintProgress() {
     float completion = doc["progress"]["completion"];
     const char* state = doc["state"];
 
-    if(strcmp(state, "Operational") == 0) {
+    if (strcmp(state, "Operational") == 0) {
       jobState = JOB_OPERATIONAL;
-    } else if(strcmp(state, "Printing") == 0) {
-      if(jobState == JOB_OPERATIONAL) {
+    } 
+    else if (strcmp(state, "Printing") == 0) {
+      if (jobState == JOB_OPERATIONAL) {
         clearLastPrint = true;
       } else {
         clearLastPrint = false;
       }
       jobState = JOB_PRINTING;
-    } else {
+    } 
+    else if (strcmp(state, "Offline") == 0) {
+      // turned off printer
+      clearLastPrint = true; 
+    }
+    else
+    {
       // catch all case in case we get "canceled" or something else
       jobState = JOB_OPERATIONAL;
     }
-    
+
     Serial.print("updatePrintProgress() job state = ");
     Serial.println(state);
     Serial.print("updatePrintProgress() setting global job state to ");
     Serial.println(jobState);
-    
+
     Serial.print("updatePrintProgress() completion_percentage: ");
     Serial.println(completion);
 
     print_progress = int((NUM_LEDS * int(completion)) / 100);
-    if(print_progress < 1) {
+    if (print_progress < 1) {
       print_progress = 1;
     }
 
@@ -584,13 +602,13 @@ void updatePrintProgress() {
 
 void loop() {
   getLatestPrinterStatus();
-  
+
   // check WIFI connection status
-  if(!isWifiConnected()) {
+  if (!isWifiConnected()) {
     Serial.println("loop() - disconnected from WiFi");
     setupWifi();
   }
-  
+
   updatePrintProgress();
 
   delay(LOOP_DELAY);
