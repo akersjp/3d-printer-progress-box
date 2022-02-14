@@ -29,4 +29,4 @@ jobs:
           sketch-paths: |
             - ./
           libraries: |
-            - ./
+            -
